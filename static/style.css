@@ -8,7 +8,6 @@
 }
 
 * { box-sizing: border-box; }
-
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -27,7 +26,7 @@ body {
 }
 
 header h1 { margin: 0 0 8px; }
-header p { color: var(--muted); margin-top: 0; }
+.sub { color: var(--muted); margin-top: 0; }
 
 .controls {
   display: grid;
@@ -36,12 +35,7 @@ header p { color: var(--muted); margin-top: 0; }
   margin: 12px 0 8px;
 }
 
-label {
-  display: grid;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 14px;
-}
+label { display: grid; gap: 6px; color: var(--muted); font-size: 14px; }
 
 select, textarea, button {
   width: 100%;
@@ -53,19 +47,12 @@ select, textarea, button {
   font-size: 16px;
 }
 
-textarea {
-  height: 160px;
-  resize: vertical;
-  margin: 10px 0 12px;
-}
+textarea { height: 160px; resize: vertical; margin: 10px 0 12px; }
 
-button {
-  cursor: pointer;
-  transition: transform 0.05s ease;
-}
-
+button { cursor: pointer; transition: transform 0.05s ease; }
 button:hover { transform: translateY(-1px); }
 button:active { transform: translateY(0px) scale(0.99); }
+button.ghost { background: #0f132b; border: 1px solid var(--border); }
 
 #results { margin-top: 24px; }
 .hidden { display: none; }
@@ -79,11 +66,9 @@ pre {
 }
 
 ul { margin-top: 8px; }
-li { margin: 6px 0; }
+li { margin: 6px 0; color: #79ffa8; }
 
-.actions {
-  margin-top: 12px;
-  display: flex;
-  gap: 10px;
-}
+.actions { margin-top: 12px; display: flex; gap: 10px; }
+
+.muted { color: var(--muted); margin-top: 8px; }
 footer { margin-top: 20px; color: var(--muted); }

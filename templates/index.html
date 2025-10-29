@@ -10,7 +10,7 @@
   <main class="container">
     <header>
       <h1>🧠 Prompt Enhancer</h1>
-      <p>Paste any raw question/instruction. Get a clean, structured LLM prompt (without learning prompt engineering).</p>
+      <p class="sub">Type your question in plain English. Get a clean, structured LLM prompt — instantly.</p>
     </header>
 
     <section class="controls">
@@ -26,6 +26,8 @@
           <option value="legal">Legal</option>
           <option value="marketing">Marketing</option>
           <option value="product">Product</option>
+          <option value="education">Education</option>
+          <option value="travel">Travel</option>
         </select>
       </label>
 
@@ -44,8 +46,9 @@
     </section>
 
     <section>
-      <textarea id="input" placeholder="e.g., Explain NPS and tell me if it's good for me."></textarea>
+      <textarea id="input" placeholder="e.g., Explain NPS and tell me if it's right for a salaried person in India aged 30."></textarea>
       <button id="go">Enhance Prompt</button>
+      <button id="clear" class="ghost">Clear</button>
     </section>
 
     <section id="results" class="hidden">
@@ -58,10 +61,13 @@
       <div class="actions">
         <button id="copyEnhanced">Copy Enhanced Prompt</button>
       </div>
+      <div id="meta" class="muted"></div>
     </section>
 
     <footer>
-      <small>Tip: This app keeps your key on the server. Do not expose API keys in the browser.</small>
+      <small>
+        Uses OpenRouter free pools with automatic fallback. If a pool is busy, you may see a brief retry.
+      </small>
     </footer>
   </main>
 
@@ -73,10 +79,7 @@
       const domain = $("domain").value;
       const tone = $("tone").value;
 
-      if (!input) {
-        alert("Please enter a prompt first.");
-        return;
-      }
+      if (!input) { alert("Please enter a prompt first."); return; }
 
       $("go").disabled = true;
       $("go").innerText = "Enhancing…";
@@ -87,28 +90,45 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ input, domain, tone })
         });
-        const data = await r.json();
 
-        if (data.error) {
-          alert(data.error);
-        } else {
-          $("results").classList.remove("hidden");
-          $("enhanced").textContent = data.enhanced || "(no result)";
-          const list = $("improvements");
-          list.innerHTML = "";
-          (data.improvements || []).forEach(item => {
-            const li = document.createElement("li");
-            li.textContent = item;
-            list.appendChild(li);
-          });
+        let data;
+        try {
+          data = await r.json();
+        } catch {
+          const txt = await r.text();
+          throw new Error(`Non-JSON response (status ${r.status}): ${txt}`);
         }
+
+        if (!r.ok) {
+          const msg = data?.error ? `${data.error}${data.hint ? " — " + data.hint : ""}` : `Request failed (${r.status})`;
+          throw new Error(msg);
+        }
+
+        $("results").classList.remove("hidden");
+        $("enhanced").textContent = data.enhanced || "(no result)";
+        const list = $("improvements"); list.innerHTML = "";
+        (data.improvements || []).forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item;
+          list.appendChild(li);
+        });
+        $("meta").textContent = data.model_used ? `Model used: ${data.model_used}` : "";
+
       } catch (e) {
         console.error(e);
-        alert("Something went wrong. Check console/logs.");
+        alert(`Something went wrong:\n${e.message}`);
       } finally {
         $("go").disabled = false;
         $("go").innerText = "Enhance Prompt";
       }
+    });
+
+    $("clear").addEventListener("click", () => {
+      $("input").value = "";
+      $("results").classList.add("hidden");
+      $("enhanced").textContent = "";
+      $("improvements").innerHTML = "";
+      $("meta").textContent = "";
     });
 
     $("copyEnhanced").addEventListener("click", async () => {

@@ -2,25 +2,21 @@ import os, json, logging
 from flask import Flask, request, jsonify, render_template
 from openai import OpenAI
 
-# ---------- App setup ----------
 app = Flask(__name__, static_folder="static", template_folder="templates")
 app.config["JSON_AS_ASCII"] = False
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("prompt-enhancer")
 
-# ---------- Keys & client (OpenRouter) ----------
-# IMPORTANT: set this in Render as an environment variable
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 if not OPENROUTER_API_KEY:
-    log.warning("OPENROUTER_API_KEY is not set. '/' will work, but '/enhance' will 500.")
+    log.warning("OPENROUTER_API_KEY is not set. '/' will work, '/enhance' will 500.")
 
 client = OpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
 
-# ---------- System prompt ----------
 SYSTEM_PROMPT = """You are an expert prompt engineer and instruction optimizer.
 Transform a user's raw input into a complete, structured prompt for a large language model.
 Rules:
@@ -32,7 +28,6 @@ Return JSON with keys:
 - improvements: array of short bullets
 """
 
-# ---------- Routes ----------
 @app.route("/", methods=["GET"])
 def home():
     return render_template("index.html")
@@ -43,7 +38,6 @@ def health():
 
 @app.route("/enhance", methods=["POST"])
 def enhance():
-    # Input validation
     try:
         data = request.get_json(force=True, silent=False) or {}
     except Exception as e:
@@ -67,19 +61,16 @@ def enhance():
     )
 
     try:
-        # Use a free model on OpenRouter for zero-cost prototyping
-        # You can swap to any other :free model later if you hit limits.
         resp = client.chat.completions.create(
-            model="deepseek/deepseek-chat:free",
+            model="deepseek/deepseek-r1:free",
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": user_prompt},
             ],
             temperature=0.2,
             response_format={"type": "json_object"},
-            # Optional attribution headers for OpenRouter best practices:
             extra_headers={
-                "HTTP-Referer": request.host_url.rstrip("/"),  # e.g., https://your-app.onrender.com
+                "HTTP-Referer": request.host_url.rstrip("/"),
                 "X-Title": "Prompt Enhancer",
             },
         )
@@ -94,8 +85,6 @@ def enhance():
         log.exception("Enhance failed")
         return jsonify({"error": f"Enhance failed: {e.__class__.__name__}: {e}"}), 500
 
-
 if __name__ == "__main__":
-    # Local run (Render will use Gunicorn/Procfile)
     port = int(os.getenv("PORT", "5000"))
     app.run(host="0.0.0.0", port=port)

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🧠 Prompt Enhancer</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>🧠 Prompt Enhancer</h1>
+      <p>Paste any raw question/instruction. Get a clean, structured LLM prompt (without learning prompt engineering).</p>
+    </header>
+
+    <section class="controls">
+      <label>
+        Domain (optional)
+        <select id="domain">
+          <option value="auto">Auto</option>
+          <option value="general">General</option>
+          <option value="finance">Finance</option>
+          <option value="coding">Coding</option>
+          <option value="writing">Writing</option>
+          <option value="research">Research</option>
+          <option value="legal">Legal</option>
+          <option value="marketing">Marketing</option>
+          <option value="product">Product</option>
+        </select>
+      </label>
+
+      <label>
+        Tone (optional)
+        <select id="tone">
+          <option value="auto">Auto</option>
+          <option value="concise">Concise</option>
+          <option value="formal">Formal</option>
+          <option value="friendly">Friendly</option>
+          <option value="analytical">Analytical</option>
+          <option value="persuasive">Persuasive</option>
+          <option value="neutral">Neutral</option>
+        </select>
+      </label>
+    </section>
+
+    <section>
+      <textarea id="input" placeholder="e.g., Explain NPS and tell me if it's good for me."></textarea>
+      <button id="go">Enhance Prompt</button>
+    </section>
+
+    <section id="results" class="hidden">
+      <h2>Enhanced Prompt</h2>
+      <pre id="enhanced"></pre>
+
+      <h3>Improvements Added</h3>
+      <ul id="improvements"></ul>
+
+      <div class="actions">
+        <button id="copyEnhanced">Copy Enhanced Prompt</button>
+      </div>
+    </section>
+
+    <footer>
+      <small>Tip: This app keeps your key on the server. Do not expose API keys in the browser.</small>
+    </footer>
+  </main>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    $("go").addEventListener("click", async () => {
+      const input = $("input").value.trim();
+      const domain = $("domain").value;
+      const tone = $("tone").value;
+
+      if (!input) {
+        alert("Please enter a prompt first.");
+        return;
+      }
+
+      $("go").disabled = true;
+      $("go").innerText = "Enhancing…";
+
+      try {
+        const r = await fetch("/enhance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input, domain, tone })
+        });
+        const data = await r.json();
+
+        if (data.error) {
+          alert(data.error);
+        } else {
+          $("results").classList.remove("hidden");
+          $("enhanced").textContent = data.enhanced || "(no result)";
+          const list = $("improvements");
+          list.innerHTML = "";
+          (data.improvements || []).forEach(item => {
+            const li = document.createElement("li");
+            li.textContent = item;
+            list.appendChild(li);
+          });
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Something went wrong. Check console/logs.");
+      } finally {
+        $("go").disabled = false;
+        $("go").innerText = "Enhance Prompt";
+      }
+    });
+
+    $("copyEnhanced").addEventListener("click", async () => {
+      const text = $("enhanced").textContent || "";
+      await navigator.clipboard.writeText(text);
+      alert("Enhanced prompt copied!");
+    });
+  </script>
+</body>
+</html>

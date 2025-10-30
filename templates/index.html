@@ -1,141 +1,220 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>🧠 Prompt Enhancer</title>
-  <link rel="stylesheet" href="/static/style.css" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PromptOS — Prompt Enhancer (V2)</title>
+  <meta name="description" content="Enhance plain-English questions into structured, high-signal prompts. Free and Pro modes. Privacy-first design."/>
+  <link rel="stylesheet" href="/static/style.css"/>
+  <!-- Optional analytics (Plausible). Uncomment after you have a domain. -->
+  <!-- <script defer data-domain="your-domain.com" src="https://plausible.io/js/script.js"></script> -->
 </head>
 <body>
   <main class="container">
-    <header>
-      <h1>🧠 Prompt Enhancer</h1>
-      <p class="sub">Type your question in plain English. Get a clean, structured LLM prompt — instantly.</p>
+    <header class="header">
+      <h1>🧠 PromptOS — Prompt Enhancer</h1>
+      <p class="sub">Turn plain English into expert-level prompts. Free (local) & Pro (cloud) modes.</p>
+      <div class="note" id="privacyBanner">
+        <strong>Privacy:</strong> We do not store or log your prompts. Free mode runs locally/deterministically. Pro mode calls a model provider via a stateless proxy without saving content.
+      </div>
     </header>
 
-    <section class="controls">
-      <label>
-        Domain (optional)
-        <select id="domain">
-          <option value="auto">Auto</option>
-          <option value="general">General</option>
-          <option value="finance">Finance</option>
-          <option value="coding">Coding</option>
-          <option value="writing">Writing</option>
-          <option value="research">Research</option>
-          <option value="legal">Legal</option>
-          <option value="marketing">Marketing</option>
-          <option value="product">Product</option>
-          <option value="education">Education</option>
-          <option value="travel">Travel</option>
-        </select>
-      </label>
-
-      <label>
-        Tone (optional)
-        <select id="tone">
-          <option value="auto">Auto</option>
-          <option value="concise">Concise</option>
-          <option value="formal">Formal</option>
-          <option value="friendly">Friendly</option>
-          <option value="analytical">Analytical</option>
-          <option value="persuasive">Persuasive</option>
-          <option value="neutral">Neutral</option>
-        </select>
-      </label>
+    <section class="bar">
+      <div class="left">
+        <label class="field">
+          <span>Mode</span>
+          <select id="mode">
+            <option value="analytical">Analytical</option>
+            <option value="technical">Technical</option>
+            <option value="creative">Creative</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Tone</span>
+          <select id="tone">
+            <option value="concise">Concise</option>
+            <option value="formal">Formal</option>
+            <option value="friendly">Friendly</option>
+            <option value="persuasive">Persuasive</option>
+            <option value="neutral">Neutral</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Tier</span>
+          <select id="tier">
+            <option value="free">Free (Local/Deterministic)</option>
+            <option value="pro">Pro (Cloud LLM)</option>
+          </select>
+        </label>
+      </div>
+      <div class="right">
+        <button id="tip" class="ghost">☕ Tip / UPI</button>
+        <button id="privacy" class="ghost">🔒 Privacy</button>
+      </div>
     </section>
 
-    <section>
-      <textarea id="input" placeholder="e.g., Explain NPS and tell me if it's right for a salaried person in India aged 30."></textarea>
-      <button id="go">Enhance Prompt</button>
-      <button id="clear" class="ghost">Clear</button>
+    <aside class="ad-slot" id="ad-slot">
+      <!-- Replace with AdSense/affiliate when ready -->
+      <span>Ad space — non-intrusive. Help keep PromptOS free.</span>
+    </aside>
+
+    <section class="editor">
+      <textarea id="input" placeholder="e.g., Explain NPS and whether it's suitable for a 30-year-old salaried person in India."></textarea>
+      <div class="row">
+        <button id="enhance">Enhance</button>
+        <button id="clear" class="ghost">Clear</button>
+        <button id="historyBtn" class="ghost">History</button>
+      </div>
     </section>
 
-    <section id="results" class="hidden">
+    <section id="results" class="results hidden">
       <h2>Enhanced Prompt</h2>
       <pre id="enhanced"></pre>
 
       <h3>Improvements Added</h3>
       <ul id="improvements"></ul>
 
-      <div class="actions">
-        <button id="copyEnhanced">Copy Enhanced Prompt</button>
+      <div class="row">
+        <button id="copyEnhanced">Copy</button>
+        <button id="downloadJSON" class="ghost">Download JSON</button>
       </div>
-      <div id="meta" class="muted"></div>
+      <div id="modelUsed" class="muted"></div>
     </section>
 
-    <footer>
+    <section id="historyPanel" class="history hidden">
+      <div class="row between">
+        <h3>Prompt History (local only)</h3>
+        <button id="clearHistory" class="ghost danger">Clear History</button>
+      </div>
+      <ul id="historyList"></ul>
+    </section>
+
+    <footer class="footer">
       <small>
-        Uses OpenRouter free pools with automatic fallback. If a pool is busy, you may see a brief retry.
+        100% stateless. No logs. Free mode is local/deterministic. Pro mode uses provider APIs without retention. <a href="#" id="privacyLink">Learn more</a>.
       </small>
     </footer>
   </main>
 
+  <!-- Privacy Modal -->
+  <dialog id="privacyModal">
+    <h3>Privacy & Trust</h3>
+    <p>We do not store, log, or retrain on your prompts. Free mode runs locally/deterministically. Pro mode calls a third-party LLM provider (e.g., via OpenRouter) through a stateless proxy; we do not persist your content.</p>
+    <ul>
+      <li>No cookies. No tracking by default.</li>
+      <li>No server-side prompt storage.</li>
+      <li>You may inspect our open-source code.</li>
+    </ul>
+    <button id="closePrivacy">Close</button>
+  </dialog>
+
+  <!-- Tip Modal -->
+  <dialog id="tipModal">
+    <h3>Support PromptOS</h3>
+    <p>If this saved you time, consider a coffee ☕ — funds our private, on-device model development.</p>
+    <ul>
+      <li>UPI: <code>babu@upi</code> (replace with your UPI)</li>
+      <li>Razorpay/Stripe: <a href="#" target="_blank" rel="noopener">https://pay.example.com/buy-coffee</a></li>
+    </ul>
+    <button id="closeTip">Close</button>
+  </dialog>
+
   <script>
     const $ = (id) => document.getElementById(id);
 
-    $("go").addEventListener("click", async () => {
+    const HIST_KEY = "promptos.history.v2";
+    function loadHistory(){ try{return JSON.parse(localStorage.getItem(HIST_KEY)||"[]")}catch{return []} }
+    function saveHistory(entry){ const h=loadHistory(); h.unshift({...entry,ts:Date.now()}); localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0,200))); }
+    function renderHistory(){
+      const list = $("historyList"); list.innerHTML = "";
+      const hist = loadHistory();
+      if(!hist.length){ const li=document.createElement("li"); li.textContent="No history yet."; list.appendChild(li); return; }
+      for(const item of hist){
+        const li=document.createElement("li");
+        const when = new Date(item.ts).toLocaleString();
+        li.innerHTML = `
+          <div><strong>Input:</strong> ${escapeHtml(item.input).slice(0,240)}</div>
+          <div><strong>Mode:</strong> ${item.mode} &nbsp; <strong>Tone:</strong> ${item.tone} &nbsp; <strong>Tier:</strong> ${item.tier}</div>
+          <div class="row">
+            <button data-action="restore">Restore</button>
+            <button data-action="copy">Copy Result</button>
+            <span class="muted" style="margin-left:auto">${when}</span>
+          </div>
+          <pre>${escapeHtml(item.enhanced).slice(0,1200)}${item.enhanced.length>1200?"…":""}</pre>
+        `;
+        li.querySelector('[data-action="restore"]').onclick = () => {
+          $("input").value = item.input; $("mode").value=item.mode; $("tone").value=item.tone; $("tier").value=item.tier;
+          window.scrollTo({top:0,behavior:"smooth"});
+        };
+        li.querySelector('[data-action="copy"]').onclick = async () => {
+          await navigator.clipboard.writeText(item.enhanced); alert("Copied enhanced prompt from history.");
+        };
+        list.appendChild(li);
+      }
+    }
+    function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])) }
+
+    $("historyBtn").onclick = ()=>{ const p=$("historyPanel"); p.classList.toggle("hidden"); if(!p.classList.contains("hidden")) renderHistory(); }
+    $("clearHistory").onclick = ()=>{ localStorage.removeItem(HIST_KEY); renderHistory(); }
+
+    $("privacy").onclick = ()=> $("privacyModal").showModal();
+    $("privacyLink").onclick = (e)=>{ e.preventDefault(); $("privacyModal").showModal(); }
+    $("closePrivacy").onclick = ()=> $("privacyModal").close();
+    $("tip").onclick = ()=> $("tipModal").showModal();
+    $("closeTip").onclick = ()=> $("tipModal").close();
+
+    $("clear").onclick = ()=>{
+      $("input").value=""; $("results").classList.add("hidden");
+      $("enhanced").textContent=""; $("improvements").innerHTML=""; $("modelUsed").textContent="";
+    };
+
+    $("copyEnhanced").onclick = async ()=>{
+      const t = $("enhanced").textContent||""; await navigator.clipboard.writeText(t); alert("Enhanced prompt copied!");
+    };
+
+    $("downloadJSON").onclick = ()=>{
+      const payload = {
+        enhanced: $("enhanced").textContent || "",
+        improvements: Array.from($("improvements").querySelectorAll("li")).map(li=>li.textContent),
+        model_used: $("modelUsed").textContent,
+        generated_at: new Date().toISOString()
+      };
+      const url = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
+      const a=document.createElement("a"); a.href=url; a.download="promptos-enhancement.json"; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
+    };
+
+    $("enhance").onclick = async ()=>{
       const input = $("input").value.trim();
-      const domain = $("domain").value;
+      const mode = $("mode").value;
       const tone = $("tone").value;
+      const tier = $("tier").value;
 
-      if (!input) { alert("Please enter a prompt first."); return; }
+      if(!input){ alert("Please enter a prompt first."); return; }
 
-      $("go").disabled = true;
-      $("go").innerText = "Enhancing…";
-
-      try {
-        const r = await fetch("/enhance", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ input, domain, tone })
+      $("enhance").disabled=true; $("enhance").innerText="Enhancing…";
+      try{
+        const res = await fetch("/enhance", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({ input, mode, tone, tier })
         });
-
-        let data;
-        try {
-          data = await r.json();
-        } catch {
-          const txt = await r.text();
-          throw new Error(`Non-JSON response (status ${r.status}): ${txt}`);
-        }
-
-        if (!r.ok) {
-          const msg = data?.error ? `${data.error}${data.hint ? " — " + data.hint : ""}` : `Request failed (${r.status})`;
-          throw new Error(msg);
-        }
+        const data = await res.json();
+        if(!res.ok){ throw new Error(data?.error || "Something went wrong"); }
 
         $("results").classList.remove("hidden");
         $("enhanced").textContent = data.enhanced || "(no result)";
-        const list = $("improvements"); list.innerHTML = "";
-        (data.improvements || []).forEach(item => {
-          const li = document.createElement("li");
-          li.textContent = item;
-          list.appendChild(li);
-        });
-        $("meta").textContent = data.model_used ? `Model used: ${data.model_used}` : "";
+        $("modelUsed").textContent = `Model used: ${data.model_used || "unknown"}${data.note ? " — "+data.note : ""}`;
 
-      } catch (e) {
-        console.error(e);
-        alert(`Something went wrong:\n${e.message}`);
-      } finally {
-        $("go").disabled = false;
-        $("go").innerText = "Enhance Prompt";
+        const list = $("improvements"); list.innerHTML="";
+        (data.improvements || []).forEach(it=>{ const li=document.createElement("li"); li.textContent = it; list.appendChild(li); });
+
+        saveHistory({ input, mode, tone, tier, enhanced: data.enhanced });
+      }catch(err){
+        alert(err?.message || String(err));
+      }finally{
+        $("enhance").disabled=false; $("enhance").innerText="Enhance";
       }
-    });
-
-    $("clear").addEventListener("click", () => {
-      $("input").value = "";
-      $("results").classList.add("hidden");
-      $("enhanced").textContent = "";
-      $("improvements").innerHTML = "";
-      $("meta").textContent = "";
-    });
-
-    $("copyEnhanced").addEventListener("click", async () => {
-      const text = $("enhanced").textContent || "";
-      await navigator.clipboard.writeText(text);
-      alert("Enhanced prompt copied!");
-    });
+    };
   </script>
 </body>
 </html>

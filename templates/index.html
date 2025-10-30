@@ -3,19 +3,18 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>PromptOS — Prompt Enhancer (V2)</title>
-  <meta name="description" content="Enhance plain-English questions into structured, high-signal prompts. Free and Pro modes. Privacy-first design."/>
+  <title>PromptOS — Prompt Enhancer (V2.1)</title>
+  <meta name="description" content="Enhance plain-English questions into expert-level AI prompts. Free and Pro modes. Privacy-first."/>
   <link rel="stylesheet" href="/static/style.css"/>
-  <!-- Optional analytics (Plausible). Uncomment after you have a domain. -->
-  <!-- <script defer data-domain="your-domain.com" src="https://plausible.io/js/script.js"></script> -->
 </head>
 <body>
   <main class="container">
     <header class="header">
       <h1>🧠 PromptOS — Prompt Enhancer</h1>
-      <p class="sub">Turn plain English into expert-level prompts. Free (local) & Pro (cloud) modes.</p>
+      <p class="sub">Turn plain English into powerful AI prompts. Now with <b>Auto Mode</b> detection for health, tech, and more.</p>
       <div class="note" id="privacyBanner">
-        <strong>Privacy:</strong> We do not store or log your prompts. Free mode runs locally/deterministically. Pro mode calls a model provider via a stateless proxy without saving content.
+        <strong>Privacy:</strong> We do not store or log your prompts. Free mode runs locally/deterministically. 
+        Pro mode connects via secure, stateless API — no data retention.
       </div>
     </header>
 
@@ -24,9 +23,11 @@
         <label class="field">
           <span>Mode</span>
           <select id="mode">
-            <option value="analytical">Analytical</option>
-            <option value="technical">Technical</option>
-            <option value="creative">Creative</option>
+            <option value="auto" selected>Auto (Recommended)</option>
+            <option value="analytical">Analytical (General)</option>
+            <option value="technical">Technical (Engineering)</option>
+            <option value="creative">Creative (Writing)</option>
+            <option value="health">Health & Nutrition</option>
           </select>
         </label>
         <label class="field">
@@ -42,24 +43,25 @@
         <label class="field">
           <span>Tier</span>
           <select id="tier">
-            <option value="free">Free (Local/Deterministic)</option>
-            <option value="pro">Pro (Cloud LLM)</option>
+            <option value="free">Free (Local)</option>
+            <option value="pro">Pro (Cloud)</option>
           </select>
         </label>
       </div>
       <div class="right">
-        <button id="tip" class="ghost">☕ Tip / UPI</button>
+        <button id="tip" class="ghost">☕ Tip</button>
         <button id="privacy" class="ghost">🔒 Privacy</button>
       </div>
     </section>
 
+    <div id="detectedHint" class="muted" style="margin-bottom:10px; font-size:13px;"></div>
+
     <aside class="ad-slot" id="ad-slot">
-      <!-- Replace with AdSense/affiliate when ready -->
-      <span>Ad space — non-intrusive. Help keep PromptOS free.</span>
+      <span>Ad space — coming soon. Help us keep PromptOS free!</span>
     </aside>
 
     <section class="editor">
-      <textarea id="input" placeholder="e.g., Explain NPS and whether it's suitable for a 30-year-old salaried person in India."></textarea>
+      <textarea id="input" placeholder="Type any question, e.g., 'Is coriander good for gut health? Or explain Docker in simple terms.'"></textarea>
       <div class="row">
         <button id="enhance">Enhance</button>
         <button id="clear" class="ghost">Clear</button>
@@ -91,7 +93,8 @@
 
     <footer class="footer">
       <small>
-        100% stateless. No logs. Free mode is local/deterministic. Pro mode uses provider APIs without retention. <a href="#" id="privacyLink">Learn more</a>.
+        100% stateless. Free mode is local/deterministic. Pro mode uses external APIs without storage. 
+        <a href="#" id="privacyLink">Learn more</a>.
       </small>
     </footer>
   </main>
@@ -99,22 +102,26 @@
   <!-- Privacy Modal -->
   <dialog id="privacyModal">
     <h3>Privacy & Trust</h3>
-    <p>We do not store, log, or retrain on your prompts. Free mode runs locally/deterministically. Pro mode calls a third-party LLM provider (e.g., via OpenRouter) through a stateless proxy; we do not persist your content.</p>
+    <p>
+      PromptOS does not store or retain your prompts. 
+      The <b>Free mode</b> runs locally and deterministically. 
+      The <b>Pro mode</b> uses secure third-party LLMs through a stateless proxy, with no data saved.
+    </p>
     <ul>
-      <li>No cookies. No tracking by default.</li>
-      <li>No server-side prompt storage.</li>
-      <li>You may inspect our open-source code.</li>
+      <li>No cookies or trackers.</li>
+      <li>No server-side logging.</li>
+      <li>Source code open for review.</li>
     </ul>
     <button id="closePrivacy">Close</button>
   </dialog>
 
   <!-- Tip Modal -->
   <dialog id="tipModal">
-    <h3>Support PromptOS</h3>
-    <p>If this saved you time, consider a coffee ☕ — funds our private, on-device model development.</p>
+    <h3>Support PromptOS ☕</h3>
+    <p>Enjoy using this? Buy us a coffee — funds go toward local model development!</p>
     <ul>
-      <li>UPI: <code>babu@upi</code> (replace with your UPI)</li>
-      <li>Razorpay/Stripe: <a href="#" target="_blank" rel="noopener">https://pay.example.com/buy-coffee</a></li>
+      <li>UPI: <code>babu@upi</code></li>
+      <li>Payment link: <a href="https://pay.example.com/buy-coffee" target="_blank" rel="noopener">pay.example.com/buy-coffee</a></li>
     </ul>
     <button id="closeTip">Close</button>
   </dialog>
@@ -122,9 +129,12 @@
   <script>
     const $ = (id) => document.getElementById(id);
 
-    const HIST_KEY = "promptos.history.v2";
-    function loadHistory(){ try{return JSON.parse(localStorage.getItem(HIST_KEY)||"[]")}catch{return []} }
-    function saveHistory(entry){ const h=loadHistory(); h.unshift({...entry,ts:Date.now()}); localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0,200))); }
+    const HIST_KEY = "promptos.history.v21";
+    function loadHistory() { try { return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); } catch { return []; } }
+    function saveHistory(entry) {
+      const h = loadHistory(); h.unshift({...entry,ts:Date.now()});
+      localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0,200)));
+    }
     function renderHistory(){
       const list = $("historyList"); list.innerHTML = "";
       const hist = loadHistory();
@@ -140,13 +150,13 @@
             <button data-action="copy">Copy Result</button>
             <span class="muted" style="margin-left:auto">${when}</span>
           </div>
-          <pre>${escapeHtml(item.enhanced).slice(0,1200)}${item.enhanced.length>1200?"…":""}</pre>
+          <pre>${escapeHtml(item.enhanced).slice(0,1000)}${item.enhanced.length>1000?"…":""}</pre>
         `;
         li.querySelector('[data-action="restore"]').onclick = () => {
-          $("input").value = item.input; $("mode").value=item.mode; $("tone").value=item.tone; $("tier").value=item.tier;
+          $("input").value=item.input; $("mode").value=item.mode; $("tone").value=item.tone; $("tier").value=item.tier;
           window.scrollTo({top:0,behavior:"smooth"});
         };
-        li.querySelector('[data-action="copy"]').onclick = async () => {
+        li.querySelector('[data-action="copy"]').onclick = async ()=>{
           await navigator.clipboard.writeText(item.enhanced); alert("Copied enhanced prompt from history.");
         };
         list.appendChild(li);
@@ -166,10 +176,12 @@
     $("clear").onclick = ()=>{
       $("input").value=""; $("results").classList.add("hidden");
       $("enhanced").textContent=""; $("improvements").innerHTML=""; $("modelUsed").textContent="";
+      $("detectedHint").textContent="";
     };
 
     $("copyEnhanced").onclick = async ()=>{
-      const t = $("enhanced").textContent||""; await navigator.clipboard.writeText(t); alert("Enhanced prompt copied!");
+      const t = $("enhanced").textContent||""; await navigator.clipboard.writeText(t);
+      alert("Enhanced prompt copied!");
     };
 
     $("downloadJSON").onclick = ()=>{
@@ -180,7 +192,8 @@
         generated_at: new Date().toISOString()
       };
       const url = URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}));
-      const a=document.createElement("a"); a.href=url; a.download="promptos-enhancement.json"; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
+      const a=document.createElement("a"); a.href=url; a.download="promptos-enhancement.json";
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); a.remove();
     };
 
     $("enhance").onclick = async ()=>{
@@ -189,9 +202,11 @@
       const tone = $("tone").value;
       const tier = $("tier").value;
 
-      if(!input){ alert("Please enter a prompt first."); return; }
+      if(!input){ alert("Please enter a question first."); return; }
 
       $("enhance").disabled=true; $("enhance").innerText="Enhancing…";
+      $("detectedHint").textContent="";
+
       try{
         const res = await fetch("/enhance", {
           method:"POST",
@@ -204,9 +219,15 @@
         $("results").classList.remove("hidden");
         $("enhanced").textContent = data.enhanced || "(no result)";
         $("modelUsed").textContent = `Model used: ${data.model_used || "unknown"}${data.note ? " — "+data.note : ""}`;
-
-        const list = $("improvements"); list.innerHTML="";
-        (data.improvements || []).forEach(it=>{ const li=document.createElement("li"); li.textContent = it; list.appendChild(li); });
+        if(data.improvements){
+          $("improvements").innerHTML = "";
+          data.improvements.forEach(it=>{
+            const li=document.createElement("li"); li.textContent=it; $("improvements").appendChild(li);
+          });
+        }
+        // Show hint for inferred domain (from improvements)
+        const modeDetected = (data.improvements || []).find(i => i.toLowerCase().includes("mode preset applied"));
+        if(modeDetected){ $("detectedHint").textContent = "🧩 " + modeDetected; }
 
         saveHistory({ input, mode, tone, tier, enhanced: data.enhanced });
       }catch(err){

@@ -6,7 +6,7 @@ A free, open-source web tool that transforms rough prompts into structured, prod
 
 ## 🚀 Live Demo
 
-👉 **[https://yourusername.github.io/prompt-enhancer](https://yourusername.github.io/prompt-enhancer)**
+👉 **[https://yourusername.github.io/prompt-enhancer](https://babubl.github.io/prompt-enhancer)**
 
 *(Replace `yourusername` with your GitHub username after deploying)*
 

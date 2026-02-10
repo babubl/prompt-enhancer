@@ -457,9 +457,13 @@ async function enhance() {
   const model = $("modelSelect").value;
 
   try {
-    const response = await puter.ai.chat(input, {
+    const messages = [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: input },
+    ];
+
+    const response = await puter.ai.chat(messages, {
       model: model,
-      system: SYSTEM_PROMPT,
       stream: true,
     });
 
